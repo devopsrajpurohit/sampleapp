@@ -4,10 +4,6 @@ resources:
 - repo: self
 variables:
   tag: '$(Build.BuildId)'
-  servicename: 
-  registryurl: 
-  containerRegistry: 
-
 stages:
 - stage: Build
   displayName: Build image
@@ -22,8 +18,8 @@ stages:
         SonarQube: 'sonar'
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: '$(servicename)'
-        cliProjectName: '$(servicename)'
+        cliProjectKey: $(servicename)
+        cliProjectName: $(servicename)
         
         
     - task: SonarQubeAnalyze@4
@@ -84,11 +80,12 @@ stages:
        imageID: '$(registryurl)/$(servicename):$(tag)'
        polling: '60'
        dockerUrl: 'unix:///var/run/docker.sock'
-    - task: AzureWebAppContainer@1
+    - task: AzureRmWebAppDeployment@4
       inputs:
-            azureSubscription: azure-resource-group
-            appName: '$(servicename)'
-            deployToSlotOrASE: true
-            resourceGroupName: 'sonar'
-            slotName: 'production'
-            containers: '$(registryurl)/$(servicename):$(tag)'
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'azure-resource-group'
+        appType: 'webAppContainer'
+        WebAppName: 'mytest1906'
+        DockerNamespace: '$(registryurl)'
+        DockerRepository: '$(servicename)'
+        DockerImageTag: '$(tag)'
