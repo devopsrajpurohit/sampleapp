@@ -22,8 +22,8 @@ stages:
         SonarQube: 'sonar'
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: '$(servicename)'
-        cliProjectName: '$(servicename)'
+        cliProjectKey: $(servicename)
+        cliProjectName: $(servicename)
         
         
     - task: SonarQubeAnalyze@4
