@@ -80,11 +80,12 @@ stages:
        imageID: '$(registryurl)/$(servicename):$(tag)'
        polling: '60'
        dockerUrl: 'unix:///var/run/docker.sock'
-    - task: AzureWebAppContainer@1
+    - task: AzureRmWebAppDeployment@4
       inputs:
-            azureSubscription: azure-resource-group
-            appName: '$(servicename)'
-            deployToSlotOrASE: true
-            resourceGroupName: 'sonar'
-            slotName: 'production'
-            containers: '$(registryurl)/$(servicename):$(tag)'
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'azure-resource-group'
+        appType: 'webAppContainer'
+        WebAppName: 'mytest1906'
+        DockerNamespace: '$(registryurl)'
+        DockerRepository: '$(servicename)'
+        DockerImageTag: '$(tag)'
