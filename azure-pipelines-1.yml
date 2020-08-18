@@ -5,6 +5,8 @@
 trigger:
 - master
 - any
+sfsf
+
 
 resources:
 - repo: self
