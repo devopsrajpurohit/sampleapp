@@ -1,0 +1,36 @@
+# Docker
+# Build a Docker image 
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        command: build
+        dockerfile: '$(Build.SourcesDirectory)/pipelines-dotnet-core-docker/Dockerfile'
+        tags: |
+          $(tag)
+    - task: AzureWebAppContainer@1
+      inputs:
+            azureSubscription: 'Infrastructure-development (81ec481e-485f-4225-866a-faf6a208641b)'
+            appName: 'test-appservice-19000'
+            resourceGroupName: 'test-resources'
+            slotName: 'production'
+            containers: 'calneticpipelineregistry.azurecr.io/sampleapp:100'      

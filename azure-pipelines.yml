@@ -1,0 +1,94 @@
+trigger:
+- master
+resources:
+- repo: self
+variables:
+  tag: '$(Build.BuildId)'
+  servicename: 
+  registryurl: 
+  containerRegistry: 
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'Ubuntu 16.04'
+    steps:
+    - task: SonarQubePrepare@4
+      inputs:
+        SonarQube: 'sonar'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: '$(servicename)'
+        cliProjectName: '$(servicename)'
+        
+        
+    - task: SonarQubeAnalyze@4
+    - task: SonarQubePublish@4
+      inputs:
+        pollingTimeoutSec: '300'
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Install dotnet-reportgenerator-globaltool'
+      inputs:
+       command: custom
+       custom: tool
+       arguments: install --tool-path . dotnet-reportgenerator-globaltool
+    - task: DotNetCoreCLI@2
+      displayName: 'RUN UNIT TEST'
+      inputs:
+       command: test
+       arguments: --collect "XPlat Code Coverage"
+     
+    - script: ./reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetDir:$(Build.SourcesDirectory)/TestResults/Coverage/Reports -reporttypes:Cobertura
+      displayName: 'Create Code Coverage Reports'
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage report'
+      inputs:
+       codeCoverageTool: 'cobertura'
+       summaryFileLocation: '**/Reports/*.xml'   
+      
+    
+    - task: PublishTestResults@2
+      displayName: 'Publish Unit Test  report'
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VSTest
+        testResultsFiles: '/home/vsts/work/_temp/*.trx'     
+  
+    - task: Docker@2
+      displayName: 'Build && Publish Docker Imange to registry...'
+      inputs:
+        containerRegistry: 'Docker-Registry'
+        repository: '$(servicename)'
+        command: 'buildAndPush'
+        Dockerfile: '*/**/Dockerfile'
+        
+    - task: CmdLine@2
+      displayName: 'Install Qualys Image scannaer'
+      inputs:
+        script: |
+          curl -o  QualysContainerSensor.tar.xz   -uupwrk3ac:UP@work@2020   https://qualysguard.qg3.apps.qualys.com/cs/rest/1.0/binary/download/
+          sudo tar -xvf QualysContainerSensor.tar.xz
+          sudo mkdir -p /usr/local/qualys/sensor/data
+          sudo ./installsensor.sh ActivationId=3aaaf1e4-4fe9-4930-8e11-abec785c2ea9 CustomerId=2a0aa1b9-dda6-c9b9-8200-8d7702616a91 Storage=/usr/local/qualys/sensor/data -s -c
+          sleep 30
+    - task: QualysCSConnector@1
+      inputs:
+       QualysApiServer: 'https://gateway.qg3.apps.qualys.com'
+       QualysApiUsername: 'upwrk3ac'
+       QualysApiPassword: 'UP@work@2020'
+       imageID: '$(registryurl)/$(servicename):$(tag)'
+       polling: '60'
+       dockerUrl: 'unix:///var/run/docker.sock'
+    - task: AzureWebAppContainer@1
+      inputs:
+            azureSubscription: azure-resource-group
+            appName: '$(servicename)'
+            deployToSlotOrASE: true
+            resourceGroupName: 'sonar'
+            slotName: 'production'
+            containers: '$(registryurl)/$(servicename):$(tag)'
