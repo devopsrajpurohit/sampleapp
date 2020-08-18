@@ -4,10 +4,6 @@ resources:
 - repo: self
 variables:
   tag: '$(Build.BuildId)'
-  servicename: 
-  registryurl: 
-  containerRegistry: 
-
 stages:
 - stage: Build
   displayName: Build image
