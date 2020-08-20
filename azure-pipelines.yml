@@ -86,6 +86,6 @@ stages:
         azureSubscription: 'azure-resource-group'
         appType: 'webAppContainer'
         WebAppName: 'mytest1906'
-        DockerNamespace: '$(registryurl)'
+        DockerNamespace: 'mytest1906'
         DockerRepository: '$(servicename)'
         DockerImageTag: '$(tag)'
