@@ -62,7 +62,6 @@ stages:
         repository: '$(servicename)'
         command: 'buildAndPush'
         Dockerfile: '*/**/Dockerfile'
-        
     - task: CmdLine@2
       displayName: 'Install Qualys Image scannaer'
       inputs:
