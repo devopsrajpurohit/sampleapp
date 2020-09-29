@@ -18,8 +18,8 @@ stages:
         SonarQube: 'sonar'
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: $(servicename)
-        cliProjectName: $(servicename)
+        cliProjectKey: sonar-pipeline
+        cliProjectName: sonar-pipeline
         
         
     - task: SonarQubeAnalyze@4
